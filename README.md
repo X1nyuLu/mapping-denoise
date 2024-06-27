@@ -6,4 +6,6 @@ And the key method can be found at the following link:
 # How to use
 
 + Install MATLAB and related packages.
++ set the default parameters.
 + run the script`main.m`
++ 
