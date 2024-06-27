@@ -31,6 +31,7 @@ And the key method can be found at the following link:
 
 已完成的功能：
 + 自动补全了成像尺寸以避免ALRMA的质因数分解问题 (2024-06-27)
++ 添加了size_x, size_y 自动计算
 + ......
 
 
