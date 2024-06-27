@@ -2,8 +2,6 @@
 
 clc; clear;
 file_path = 'XY sample52.txt';      % 请在此修改文件路径
-size_x = 40;                        % 请在输入成像的尺寸信息
-size_y = 25;                        % 请在输入成像的尺寸信息
 cropped_wavenumber = [1800, 2000];   % 请在输入裁切的拉曼位移
 
 demo_target_x = 11;                 % 请在输入待展示的像素坐标（目标区域）
@@ -17,11 +15,14 @@ data = importdata(file_path);
 wavenumber = data(1, 3:end);
 position = data(:, 1:2);
 
+
+% 计算 size_x 和 size_y
+size_y = length(unique(data(2:end, 1)));
+size_x = length(unique(data(2:end, 2)));
+
+
 origin_matrix = data(2:end, 3:end);
 
-if size_x * size_y ~= size(origin_matrix, 1)
-    error '尺寸设置错误，请检查传入的尺寸'
-end
 
 origin_matrix = despike2(origin_matrix)';
 origin_hsi = reshape(origin_matrix, [], size_x, size_y);
