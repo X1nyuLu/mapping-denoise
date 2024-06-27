@@ -19,7 +19,7 @@
 %% 加载数据
 
 clc; clear;
-file_path = 'xy sample 52.txt'; % 请在此修改文件路径
+file_path = 'XY sample52.txt'; % 请在此修改文件路径
 size_x = 40; % 请在输入成像的尺寸信息
 size_y = 25; % 请在输入成像的尺寸信息
 croped_wavenumber = [1800, 2000];
@@ -67,37 +67,26 @@ subplot(224); plot(wavenumber, mean(origin_target, 2)); title 'averaged spectrum
 %% select the background and target
 
 croped_bg_size = size(origin_bg, 2);
-bg_factors = prime_factors(croped_bg_size);
+bg_zero_integer = nearest_last_zero_integer(croped_bg_size);
 
-if bg_factors(end) == croped_bg_size
-    origin_bg = [origin_bg zeros(size(origin_bg, 1), 1)];
-    bg_factors = prime_factors(size(origin_bg, 2));
+if bg_zero_integer ~= croped_bg_size
+    origin_bg = [origin_bg zeros(size(origin_bg, 1), bg_zero_integer-croped_bg_size)];
 end
 
-if size(bg_factors, 2) > 2
-    bg_factor = bg_factors(end)*bg_factors(end-1);
-else
-    bg_factor = bg_factors(end);
-end
+fprintf('ALRMA start for bg');
+[recon_bg, ~, ~] = ALRMA(origin_bg, 10, 1:1600, 5, 50, 1e-5, 0.05);
 
-[recon_bg, ~, ~] = ALRMA(origin_bg, bg_factor, 1:1600, 5, 50, 1e-5, 0.05);
 recon_bg = recon_bg(:, 1:croped_bg_size);
 
 croped_target_size = size(origin_target, 2);
-target_factors = prime_factors(size(origin_target, 2));
+target_zero_integer = nearest_last_zero_integer(croped_target_size);
 
-if target_factors(end) == croped_target_size
-    origin_target = [origin_target zeros(size(origin_target, 1), 1)];
-    target_factors = prime_factors(size(origin_target, 2));
+if target_zero_integer ~= croped_target_size
+    origin_target = [origin_target zeros(size(origin_target, 1), target_zero_integer-croped_target_size)];
 end
 
-if size(target_factors, 2) > 2
-    target_factor = target_factors(end)*target_factors(end-1);
-else
-    target_factor = target_factors(end);
-end
-
-[recon_target, ~, ~] = ALRMA(origin_target, target_factor, 1:1600, 5, 50, 1e-5, 0.05);
+fprintf('ALRMA start for target');
+[recon_target, ~, ~] = ALRMA(origin_target, 10, 1:1600, 5, 50, 1e-5, 0.05);
 recon_target = recon_target(:, 1:croped_target_size);
 
 recon_matrix = zeros(size(origin_matrix));
@@ -137,8 +126,43 @@ subplot(234); plot(wavenumber, origin_hsi(:, 12, 11)); xlabel('Raman shift (cm^{
 subplot(235); plot(wavenumber, recon_hsi(:, 12, 11) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, 12, 11) ./ squeeze(mean(recon_bg, 2))); xlabel('Raman shift (cm^{-1})');
 subplot(236); plot(wavenumber, origin_hsi(:, 12, 11) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, 12, 11) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); 
 
-%% 分区拟合
+%% Process all points in target region
+
+% Initialize matrices to store results
+processed_target_spectra = zeros(size(recon_target));
+
+% Loop over each target point
+for i = 1:size(recon_target, 2)
+    recon_spectrum = recon_target(:, i);
+    
+    % Process the spectrum
+    processed_spectrum = recon_spectrum ./ squeeze(mean(origin_bg, 2)); % Example processing
+    % Store the results
+    processed_target_spectra(:, i) = processed_spectrum;
+end
+
+%%
+% Plot the 随机 6 processed spectra
+% figure('Position', [100, 100, 1800, 600]);
+% for i = 1:6
+%     subplot(2, 3, i);
+%     plot(wavenumber, processed_target_spectra(:, 100+i), 'LineWidth', 1.5);
+%     title(['Processed Target Spectrum ' num2str(i)]);
+%     xlabel('Raman shift (cm^{-1})');
+%     ylabel('Intensity');
+% end
+
+%% 分区拟合(寻峰)
 % 。。。
+% wavenumber_max_list = [];
+% for i = 1:size(recon_target, 2)
+%     processed_target_spectra_i = processed_target_spectra(:, i);
+%     intensity_range_i = processed_target_spectra_i(croped_id_right:croped_id_left);
+%     [max_intensity, max_index] = max(intensity_range_i);
+%     wavenumber_max_i = wavenumber(croped_id_right + max_index - 1);
+%     wavenumber_max_list = [wavenumber_max_list, wavenumber_max_i];
+% end
 
 %% 可视化峰位置的mapping
 % 。。。
+

@@ -34,7 +34,7 @@ for i = 1:D
     hw = icdf(pd,1-thr);
     [x,y] = find(err>=hw|err<=lw);
     if ~isempty(x)
-        fprintf('第%d个波长共有%d个鬼峰\n',i,length(x));
+        % fprintf('第%d个波长共有%d个鬼峰\n',i,length(x));
         cube(x,y,i) = medcube(x,y);
     end
     clear x y;
