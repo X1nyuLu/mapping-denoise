@@ -70,7 +70,8 @@ croped_bg_size = size(origin_bg, 2);
 bg_zero_integer = nearest_last_zero_integer(croped_bg_size);
 
 if bg_zero_integer ~= croped_bg_size
-    origin_bg = [origin_bg zeros(size(origin_bg, 1), bg_zero_integer-croped_bg_size)];
+    m_bg = mean(origin_bg, 2);
+    origin_bg = [origin_bg m_bg.*ones(size(origin_bg, 1), bg_zero_integer-croped_bg_size)];
 end
 
 fprintf('ALRMA start for bg');
@@ -82,7 +83,8 @@ croped_target_size = size(origin_target, 2);
 target_zero_integer = nearest_last_zero_integer(croped_target_size);
 
 if target_zero_integer ~= croped_target_size
-    origin_target = [origin_target zeros(size(origin_target, 1), target_zero_integer-croped_target_size)];
+    m_target = mean(origin_target, 2);
+    origin_target = [origin_target m_target.*ones(size(origin_target, 1), target_zero_integer-croped_target_size)];
 end
 
 fprintf('ALRMA start for target');
