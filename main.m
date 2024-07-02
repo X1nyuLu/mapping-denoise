@@ -1,7 +1,7 @@
 %% 加载数据
 
 clc; clear;
-file_path = 'XY sample71.txt';      % 请在此修改文件路径
+file_path = 'XY sample52.txt';      % 请在此修改文件路径
 cropped_wavenumber = [1800, 2000];   % 请在输入裁切的拉曼位移
 
 demo_target_x = 11;                 % 请在输入待展示的像素坐标（目标区域）
@@ -140,7 +140,7 @@ subplot(236); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(me
 
 %%  保存文件
 
-fid=fopen('XY sample71_processed.txt.txt','wt');    % 设置文件保存名字
+fid=fopen('XY sample52_processed.txt','wt');    % 设置文件保存名字
 recon_matrix_T = recon_matrix';
 recon_matrix_T = [wavenumber;recon_matrix_T];
 recon_matrix_T = [position,recon_matrix_T];
