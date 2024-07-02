@@ -82,10 +82,13 @@ if bg_zero_integer ~= cropped_bg_size
     origin_bg = [origin_bg m_bg.*ones(size(origin_bg, 1), bg_zero_integer-cropped_bg_size)];
 end
 
-fprintf('对背景区域降噪...');
-[recon_bg, ~, ~] = ALRMA(origin_bg, 10, 1:1600, 3, 50, 1e-5, 0.05);
+% fprintf('对背景区域降噪...');
+% [recon_bg, ~, ~] = ALRMA(origin_bg, 10, 1:1600, 1, 50, 1e-5, 0.05);
+% 
+% recon_bg = recon_bg(:, 1:cropped_bg_size);
+% 
+recon_bg = origin_bg(:, 1:cropped_bg_size);
 
-recon_bg = recon_bg(:, 1:cropped_bg_size);
 
 cropped_target_size = size(origin_target, 2);
 target_zero_integer = nearest_last_zero_integer(cropped_target_size);
@@ -96,7 +99,7 @@ if target_zero_integer ~= cropped_target_size
 end
 
 fprintf('对目标区域降噪...');
-[recon_target, ~, ~] = ALRMA(origin_target, 10, 1:1600, 3, 50, 1e-5, 0.05);
+[recon_target, ~, ~] = ALRMA(origin_target, 10, 1:1600, 2, 50, 1e-5, 0.05);
 recon_target = recon_target(:, 1:cropped_target_size);
 
 recon_matrix = (origin_matrix);
@@ -127,28 +130,28 @@ plot(wavenumber, mean(recon_target, 2), 'Color', 'r', 'LineWidth', 0.5); title '
 
 figure('Position', [100, 100, 1800, 600]);
 subplot(231); plot(wavenumber, origin_hsi(:, demo_target_y, demo_target_x)); xlabel('Raman shift (cm^{-1})'); title 'raw spectrum within target zone';
-subplot(232); plot(wavenumber, recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(recon_bg, 2))); xlabel('Raman shift (cm^{-1})');
+subplot(232); plot(wavenumber, recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); 
 subplot(233); plot(wavenumber, origin_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})');
 
 
 subplot(234); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x)); xlabel('Raman shift (cm^{-1})'); title 'raw spectrum within background zone';
-subplot(235); plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(recon_bg, 2))); xlabel('Raman shift (cm^{-1})');
+subplot(235); plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})');
 subplot(236); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); 
 
 %% Process all points in target region
 
 % Initialize matrices to store results
-processed_target_spectra = zeros(size(recon_target));
-
-% Loop over each target point
-for i = 1:size(recon_target, 2)
-    recon_spectrum = recon_target(:, i);
-    
-    % Process the spectrum
-    processed_spectrum = recon_spectrum ./ squeeze(mean(origin_bg, 2)); % Example processing
-    % Store the results
-    processed_target_spectra(:, i) = processed_spectrum;
-end
+% processed_target_spectra = zeros(size(recon_target));
+% 
+% % Loop over each target point
+% for i = 1:size(recon_target, 2)
+%     recon_spectrum = recon_target(:, i);
+% 
+%     % Process the spectrum
+%     processed_spectrum = recon_spectrum ./ squeeze(mean(origin_bg, 2)); % Example processing
+%     % Store the results
+%     processed_target_spectra(:, i) = processed_spectrum;
+% end
 
 %%
 % Plot the 随机 6 processed spectra
