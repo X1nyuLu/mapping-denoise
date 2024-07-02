@@ -138,7 +138,30 @@ subplot(234); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x)); xlabel('Ram
 subplot(235); plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})');
 subplot(236); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); 
 
-%% Process all points in target region
+%%  保存文件
+
+fid=fopen('XY sample71_processed.txt.txt','wt');    % 设置文件保存名字
+recon_matrix_T = recon_matrix';
+recon_matrix_T = [wavenumber;recon_matrix_T];
+recon_matrix_T = [position,recon_matrix_T];
+
+[m, n] = size(recon_matrix_T);
+for i=1:1:m
+    for j=1:1:n
+       if j==n
+         fprintf(fid,'%g\n',recon_matrix_T(i,j));
+      else
+        fprintf(fid,'%g\t',recon_matrix_T(i,j));
+       end
+    end
+end
+fclose(fid);
+
+
+
+
+%% 
+
 
 % Initialize matrices to store results
 % processed_target_spectra = zeros(size(recon_target));
