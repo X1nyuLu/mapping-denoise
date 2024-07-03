@@ -107,6 +107,17 @@ recon_matrix(:, ismember(idx, target_idx)) = recon_target;
 recon_matrix(:, ismember(idx, bg_idx)) = recon_bg;
 recon_hsi = reshape(recon_matrix, 1600, size_x, size_y);
 
+%% 全图像素点谱图除以背景的平均谱
+
+recon_matrix_allpixels = recon_matrix ./ squeeze(mean(origin_bg, 2));
+recon_matrix_allpixels_hsi = reshape(recon_matrix_allpixels, [], size_x, size_y);
+recon_matrix_allpixels_img = squeeze(mean(recon_matrix_allpixels_hsi(cropped_id_right:cropped_id_left, :, :), 1));
+
+set(0,'defaultfigurecolor','w') 
+figure;
+subplot(221); imagesc(recon_matrix_allpixels_img);  title 'all pixels / mean(origin spec)'; colorbar;
+
+%%
 figure;
 subplot(221); 
 plot(wavenumber, origin_hsi(:, demo_target_y, demo_target_x), 'Color', 'b'); hold on; 
@@ -125,7 +136,7 @@ plot(wavenumber, mean(origin_target, 2), 'Color', 'b', 'LineWidth', 2); hold on;
 plot(wavenumber, mean(recon_target, 2), 'Color', 'r', 'LineWidth', 0.5); title 'averaged spectrum of target zone'; xlabel('Raman shift (cm^{-1})');
 
 
-%% 除以背景的平均谱
+%% 自选取点除以背景的平均谱
 
 
 figure('Position', [100, 100, 1800, 600]);
@@ -137,6 +148,7 @@ subplot(233); plot(wavenumber, origin_hsi(:, demo_target_y, demo_target_x) ./ sq
 subplot(234); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x)); xlabel('Raman shift (cm^{-1})'); title 'raw spectrum within background zone';
 subplot(235); plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})');
 subplot(236); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); 
+
 
 %%  保存文件
 
@@ -152,6 +164,30 @@ for i=1:1:m
          fprintf(fid,'%g\n',recon_matrix_T(i,j));
       else
         fprintf(fid,'%g\t',recon_matrix_T(i,j));
+       end
+    end
+end
+fclose(fid);
+
+%% 只保存recon_target区域，其余归零
+
+[m, n] = size(origin_matrix); 
+recon_special = zeros(m, n);
+recon_special(:, ismember(idx, target_idx)) = recon_target;
+
+recon_special_T = recon_special';
+recon_special_T = [wavenumber;recon_special_T];
+recon_special_T = [position,recon_special_T];
+
+fid=fopen('XY sample52_recontarget.txt','wt');  % 设置文件保存名字
+
+[p,q] = size(recon_special_T);
+for i=1:1:p
+    for j=1:1:q
+       if j==q
+         fprintf(fid,'%g\n',recon_special_T(i,j));
+      else
+        fprintf(fid,'%g\t',recon_special_T(i,j));
        end
     end
 end
