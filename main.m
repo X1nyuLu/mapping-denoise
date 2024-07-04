@@ -4,11 +4,11 @@ clc; clear;
 file_path = 'XY sample52.txt';      % 请在此修改文件路径
 cropped_wavenumber = [1800, 2000];   % 请在输入裁切的拉曼位移
 
-demo_target_x = 11;                 % 请在输入待展示的像素坐标（目标区域）
-demo_target_y = 19;                 % 请在输入待展示的像素坐标（目标区域）
+demo_target_x = 12;                 % 请在输入待展示的像素坐标（目标区域）
+demo_target_y = 25;                 % 请在输入待展示的像素坐标（目标区域）
 
-demo_bg_x = 13;                     % 请在输入待展示的像素坐标（背景区域）
-demo_bg_y = 34;                     % 请在输入待展示的像素坐标（背景区域）
+demo_bg_x = 4;                     % 请在输入待展示的像素坐标（背景区域）
+demo_bg_y = 15;                     % 请在输入待展示的像素坐标（背景区域）
 
 num_clusters = 8;                   % 请在输入聚类中心的个数
 
@@ -63,8 +63,8 @@ figure;
 subplot(221); imagesc(origin_img);  title 'raw'; colorbar;
 subplot(222); imagesc(idx_img); title 'K-means clustering (k=4)'; colorbar;
 
-bg_idx = input("请输入当作背景的聚类中心编号(例如1，或者[1,2,3]): ");
-target_idx = input("请输入当作目标的聚类中心编号(例如1，或者[1,2,3]): ");
+bg_idx = input("请输入当作背景的聚类中心编号(例如[1]，或者[1,2,3]): ");
+target_idx = input("请输入当作目标的聚类中心编号(例如[1]，或者[1,2,3]): ");
 
 origin_bg = origin_matrix(:, ismember(idx, bg_idx));
 origin_target = origin_matrix(:, ismember(idx, target_idx));
@@ -140,14 +140,88 @@ plot(wavenumber, mean(recon_target, 2), 'Color', 'r', 'LineWidth', 0.5); title '
 
 
 figure('Position', [100, 100, 1800, 600]);
-subplot(231); plot(wavenumber, origin_hsi(:, demo_target_y, demo_target_x)); xlabel('Raman shift (cm^{-1})'); title 'raw spectrum within target zone';
-subplot(232); plot(wavenumber, recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); 
-subplot(233); plot(wavenumber, origin_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})');
+
+subplot(231);
+plot(wavenumber, origin_hsi(:, demo_target_y, demo_target_x));
+xlabel('Raman shift (cm^{-1})');
+title 'raw spectrum within target zone';
+
+subplot(232);
+plot(wavenumber, recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2)));
+xlabel('Raman shift (cm^{-1})');
+title 'recon target pixel spec ./ mean(origin bg spec)';
+
+subplot(233);
+plot(wavenumber, origin_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2)));
+xlabel('Raman shift (cm^{-1})'); 
+title 'origin target pixel spec ./ mean(origin bg spec)';hold on;
+% plot(wavenumber, recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2)));
+% xlabel('Raman shift (cm^{-1})');
+
+subplot(234);
+plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x));
+xlabel('Raman shift (cm^{-1})');
+title 'raw spectrum within background zone';
+
+subplot(235);
+plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2)));
+xlabel('Raman shift (cm^{-1})');
+title 'recon bg pixel spec ./ mean(origin bg spec)';
+
+subplot(236);
+plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2)));
+xlabel('Raman shift (cm^{-1})'); 
+title 'origin bg pixel spec ./ mean(origin bg spec)';hold on;
+% plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2)));
+% xlabel('Raman shift (cm^{-1})');
+
+%% 峰拟合
+
+peak_data = recon_hsi(:, demo_target_y, demo_target_x) ./ squeeze(mean(origin_bg, 2));
+peak_data = peak_data(cropped_id_right:cropped_id_left);
+spec = peak_data;
+x = wavenumber(cropped_id_right:cropped_id_left)';
+
+% spec = sgolayfilt(spec, 5, 15);
 
 
-subplot(234); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x)); xlabel('Raman shift (cm^{-1})'); title 'raw spectrum within background zone';
-subplot(235); plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})');
-subplot(236); plot(wavenumber, origin_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); hold on; plot(wavenumber, recon_hsi(:, demo_bg_y, demo_bg_x) ./ squeeze(mean(origin_bg, 2))); xlabel('Raman shift (cm^{-1})'); 
+[~, max_index] = findpeaks(spec, 'SortStr', 'descend', 'NPeaks', 1);
+
+peak_X = x(max_index);
+peak_y = spec(max_index);
+
+half_max_height = (peak_y - min(spec)) / 2 + min(spec);
+left_index = find(spec(1:max_index) <= half_max_height, 1, 'last');
+right_index = find(spec(max_index:end) <= half_max_height, 1, 'first') + max_index - 1;
+FWHM = x(right_index) - x(left_index);
+
+init_sigma = FWHM / (2 * sqrt(2 * log(2))); 
+init_para = [peak_X, peak_y - min(spec), init_sigma, peak_y - min(spec), FWHM / 2, min(spec)];
+
+
+options = optimset('Display', 'off');
+[popt_mixed, ~] = lsqcurvefit(@mixed_gaussian_lorentzian, init_para, x, spec, [], [], options);
+
+% 显示拟合参数
+disp(['Peak X: ', num2str(peak_X), ' cm^{-1}']);
+disp(['Peak Y: ', num2str(peak_y), ' 相对强度']);
+disp(['FWHM: ', num2str(- FWHM)]);
+disp('拟合参数:');
+disp(popt_mixed);
+
+figure;
+subplot(2, 1, 1);
+plot(x, spec, 'r'); 
+title('Raw spec at [1800,2000]');
+xlabel('Raman shift (cm^{-1})');
+ylabel('Intensity');
+
+subplot(2, 1, 2);
+plot(x, spec, 'r', x, mixed_gaussian_lorentzian(popt_mixed, x), 'g'); 
+title('Fitting spec');
+xlabel('Raman shift (cm^{-1})');
+ylabel('Intensity');
+legend('Raw data', 'Fitted curve');
 
 
 %%  保存文件
@@ -192,48 +266,4 @@ for i=1:1:p
     end
 end
 fclose(fid);
-
-
-
-
-%% 
-
-
-% Initialize matrices to store results
-% processed_target_spectra = zeros(size(recon_target));
-% 
-% % Loop over each target point
-% for i = 1:size(recon_target, 2)
-%     recon_spectrum = recon_target(:, i);
-% 
-%     % Process the spectrum
-%     processed_spectrum = recon_spectrum ./ squeeze(mean(origin_bg, 2)); % Example processing
-%     % Store the results
-%     processed_target_spectra(:, i) = processed_spectrum;
-% end
-
-%%
-% Plot the 随机 6 processed spectra
-% figure('Position', [100, 100, 1800, 600]);
-% for i = 1:6
-%     subplot(2, 3, i);
-%     plot(wavenumber, processed_target_spectra(:, 100+i), 'LineWidth', 1.5);
-%     title(['Processed Target Spectrum ' num2str(i)]);
-%     xlabel('Raman shift (cm^{-1})');
-%     ylabel('Intensity');
-% end
-
-%% 分区拟合(寻峰)
-% 。。。
-% wavenumber_max_list = [];
-% for i = 1:size(recon_target, 2)
-%     processed_target_spectra_i = processed_target_spectra(:, i);
-%     intensity_range_i = processed_target_spectra_i(cropped_id_right:cropped_id_left);
-%     [max_intensity, max_index] = max(intensity_range_i);
-%     wavenumber_max_i = wavenumber(cropped_id_right + max_index - 1);
-%     wavenumber_max_list = [wavenumber_max_list, wavenumber_max_i];
-% end
-
-%% 可视化峰位置的mapping
-% 。。。
 
